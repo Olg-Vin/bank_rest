@@ -1,0 +1,142 @@
+databaseChangeLog:
+- changeSet:
+  - id: create-table-user
+    author: Vinio
+    changes:
+      - createTable:
+          tableName: users
+          columns:
+            - column:
+                name: id
+                type: bigserial
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: username
+                type: varchar(64)
+                constraints:
+                  nullable: false
+                  unique: true
+            - column:
+                name: password
+                type: varchar(255)
+                constraints:
+                  nullable: false
+- changeSet:
+  - id: create-table-role
+    author: Vinio
+    changes:
+      - createTable:
+          tableName: roles
+          columns:
+            - column:
+                name: id
+                type: bigserial
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: role_name
+                type: varchar(32)
+                constraints:
+                  nullable: false
+                  unique: true
+- changeSet:
+  - id: create-table-user-roles
+    author: Vinio
+    changes:
+      - createTable:
+          tableName: user_roles
+          columns:
+            - column:
+                name: user_id
+                type: bigint
+                constraints:
+                  nullable: false
+                  foreignKeyName: fk_user_roles_user
+                  references: users(id)
+            - column:
+                name: role_id
+                type: bigint
+                constraints:
+                  nullable: false
+                  foreignKeyName: fk_user_roles_role
+                  references: roles(id)
+      - addPrimaryKey:
+          tableName: user_roles
+          columnNames: user_id, role_id
+- changeSet:
+  - id: create-table-card
+    author: Vinio
+    changes:
+      - createTable:
+          tableName: cards
+          columns:
+            - column:
+                name: id
+                type: bigserial
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: card_number
+                type: varchar(64) # хранить зашифрованное значение
+                constraints:
+                  nullable: false
+            - column:
+                name: owner_id
+                type: bigint
+                constraints:
+                  nullable: false
+                  foreignKeyName: fk_card_user
+                  references: users(id)
+            - column:
+                name: validity_period
+                type: date
+            - column:
+                name: status
+                type: varchar(24)
+            - column:
+                name: balance
+                type: numeric(19,2)
+                defaultValueNumeric: 0.00
+- changeSet:
+  - id: create-table-transaction
+    author: Vinio
+    changes:
+      - createTable:
+          tableName: transactions
+          columns:
+            - column:
+                name: id
+                type: bigserial
+                constraints:
+                  primaryKey: true
+                  nullable: false
+            - column:
+                name: from_card_id
+                type: bigint
+                constraints:
+                  nullable: false
+                  foreignKeyName: fk_transaction_from_card
+                  references: cards(id)
+            - column:
+                name: to_card_id
+                type: bigint
+                constraints:
+                  nullable: false
+                  foreignKeyName: fk_transaction_to_card
+                  references: cards(id)
+            - column:
+                name: amount
+                type: numeric(19,2)
+                constraints:
+                  nullable: false
+            - column:
+                name: created_at
+                type: timestamp
+                defaultValueComputed: CURRENT_TIMESTAMP
+            - column:
+                name: status
+                type: varchar(24)
