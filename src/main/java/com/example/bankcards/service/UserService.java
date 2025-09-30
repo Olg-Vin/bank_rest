@@ -40,7 +40,7 @@ public class UserService {
         UserRole userRole = roleRepository.findUserRoleByRoleName(Role.valueOf(roleName))
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        user.getUserRoles().add(userRole);
+        user.getRoles().add(userRole);
         userRepository.save(user);
     }
 }

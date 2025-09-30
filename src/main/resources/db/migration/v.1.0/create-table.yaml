@@ -102,6 +102,16 @@ databaseChangeLog:
                 type: numeric(19,2)
                 defaultValueNumeric: 0.00
 - changeSet:
+    - id: add-column-user
+      author: Vinio
+      changes:
+        - addColumn:
+            tableName: cards
+            columns:
+              - column:
+                  name: last4
+                  type: varchar(4)
+- changeSet:
   - id: create-table-transaction
     author: Vinio
     changes:

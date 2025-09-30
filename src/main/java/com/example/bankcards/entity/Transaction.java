@@ -30,7 +30,7 @@ public class Transaction {
 
     @Column(name = "created_at", columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
-
+//      Можно перейти на использование Enum
     @Column(nullable = false)
     private String status;
 
