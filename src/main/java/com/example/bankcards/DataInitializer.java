@@ -1,9 +1,10 @@
 package com.example.bankcards;
 
 import com.example.bankcards.entity.Card;
-import com.example.bankcards.entity.Role;
+import com.example.bankcards.entity.UserRole;
 import com.example.bankcards.entity.Transaction;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.entity.enums.Role;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.RoleRepository;
 import com.example.bankcards.repository.TransactionRepository;
@@ -39,11 +40,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         // Создание ролей
-        Role adminRole = createRole("ADMIN");
-        Role userRole = createRole("USER");
+        UserRole adminUserRole = createRole("ADMIN");
+        UserRole userRole = createRole("USER");
 
         // Создание пользователей
-        User admin = createUser("admin", "admin123", List.of(adminRole));
+        User admin = createUser("admin", "admin123", List.of(adminUserRole));
         User user = createUser("user", "user123", List.of(userRole));
 
         // Создание карт
@@ -72,23 +73,22 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private Role createRole(String roleName) {
-        Role role = roleRepository.findByRoleName(roleName)
+    private UserRole createRole(String roleName) {
+        return roleRepository.findUserRoleByRoleName(Role.valueOf(roleName))
                 .orElseGet(() -> {
-                    Role newRole = new Role();
-                    newRole.setRoleName(roleName);
-                    return roleRepository.save(newRole);
+                    UserRole newUserRole = new UserRole();
+                    newUserRole.setRoleName(Role.valueOf(roleName));
+                    return roleRepository.save(newUserRole);
                 });
-        return role;
     }
 
-    private User createUser(String username, String password, List<Role> roles) {
+    private User createUser(String username, String password, List<UserRole> userRoles) {
         return userRepository.findByUsername(username)
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setUsername(username);
                     newUser.setPassword(password);
-                    newUser.setRoles(new HashSet<>(roles));
+                    newUser.setUserRoles(new HashSet<>(userRoles));
                     return userRepository.save(newUser);
                 });
     }

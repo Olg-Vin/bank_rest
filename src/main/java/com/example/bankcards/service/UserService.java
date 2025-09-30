@@ -1,7 +1,8 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.entity.Role;
+import com.example.bankcards.entity.UserRole;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.entity.enums.Role;
 import com.example.bankcards.exception.exceptions.RoleNotFoundException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.RoleRepository;
@@ -36,10 +37,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Role role = roleRepository.findByRoleName(roleName)
+        UserRole userRole = roleRepository.findUserRoleByRoleName(Role.valueOf(roleName))
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        user.getRoles().add(role);
+        user.getUserRoles().add(userRole);
         userRepository.save(user);
     }
 }
