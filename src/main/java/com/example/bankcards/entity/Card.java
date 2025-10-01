@@ -20,7 +20,7 @@ public class Card {
     @Column(nullable = false)
     private String last4; // последние 4 цифры карты
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 

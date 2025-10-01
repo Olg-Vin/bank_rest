@@ -17,11 +17,11 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "from_card_id", nullable = false)
     private Card fromCard;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "to_card_id", nullable = false)
     private Card toCard;
 
@@ -29,10 +29,10 @@ public class Transaction {
     private BigDecimal amount;
 
     @Column(name = "created_at", columnDefinition = "timestamp default CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 //      Можно перейти на использование Enum
     @Column(nullable = false)
-    private String status;
+    private String status = "CREATE";
 
     public Transaction(Card fromCard, Card toCard, BigDecimal amount) {
         this.fromCard = fromCard;
