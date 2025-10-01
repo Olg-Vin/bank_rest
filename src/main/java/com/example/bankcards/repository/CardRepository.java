@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface CardRepository extends JpaRepository<Card, Long> {
     Optional<Card> findByCardNumber(String cardNumber);
-
+    Optional<Card> findByLast4(String last4);
     @Query("SELECT c FROM Card c WHERE c.owner.id = :ownerId")
     List<Card> findAllByOwnerId(Long ownerId);
 }

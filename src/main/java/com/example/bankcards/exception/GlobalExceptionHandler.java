@@ -1,6 +1,7 @@
 package com.example.bankcards.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,6 +13,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBaseException(BaseException ex) {
         return new ErrorResponse(ex.getErrorCode(), ex.getErrorMessage());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadCredentialsException(BadCredentialsException ex) {
+        return new ErrorResponse("401", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

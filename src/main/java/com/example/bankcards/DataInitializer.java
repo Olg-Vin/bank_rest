@@ -9,14 +9,15 @@ import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.RoleRepository;
 import com.example.bankcards.repository.TransactionRepository;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.util.CardNumberEncryptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.HashSet;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -25,52 +26,59 @@ public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final CardRepository cardRepository;
     private final TransactionRepository transactionRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final CardNumberEncryptionService cardNumberEncryptionService;
 
     @Autowired
     public DataInitializer(UserRepository userRepository,
                            RoleRepository roleRepository,
                            CardRepository cardRepository,
-                           TransactionRepository transactionRepository) {
+                           TransactionRepository transactionRepository,
+                           PasswordEncoder passwordEncoder,
+                           CardNumberEncryptionService cardNumberEncryptionService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.cardRepository = cardRepository;
         this.transactionRepository = transactionRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.cardNumberEncryptionService = cardNumberEncryptionService;
     }
 
     @Override
-    public void run(String... args) {
+    public void run(String... args) throws Exception {
         // Создание ролей
-        UserRole adminUserRole = createRole("ADMIN");
-        UserRole userRole = createRole("USER");
+        UserRole adminUserRole = createRole("ROLE_ADMIN");
+        UserRole userRole = createRole("ROLE_USER");
 
         // Создание пользователей
-        User admin = createUser("admin", "admin123", List.of(adminUserRole));
-        User user = createUser("user", "user123", List.of(userRole));
-
-        // Создание карт
-        createCard(admin, "4111111111111111", LocalDate.now().plusYears(2));
-        createCard(user, "4222222222222222", LocalDate.now().plusYears(3));
-
-        // Создание тестовых транзакций
-        if (cardRepository.count() >= 2) {
-            List<Card> cards = cardRepository.findAll();
-            Card fromCard = cards.get(0);
-            Card toCard = cards.get(1);
-
-            fromCard.setBalance(new BigDecimal("1000.00"));
-            toCard.setBalance(new BigDecimal("500.00"));
-
-            cardRepository.save(fromCard);
-            cardRepository.save(toCard);
-
-            transactionRepository.save(
-                    new Transaction(
-                            fromCard,
-                            toCard,
-                            new BigDecimal("100.00")
-                    )
-            );
-        }
+//        User admin = createUser("admin", passwordEncoder.encode("admin123"), adminUserRole);
+//        User user = createUser("user", passwordEncoder.encode("user123"), userRole);
+//
+//        // Создание карт
+//        createCard(admin, cardNumberEncryptionService.encrypt("4111111111111111"), LocalDate.now().plusYears(2));
+//        createCard(user, cardNumberEncryptionService.encrypt("4222222222222222"), LocalDate.now().plusYears(3));
+//        createCard(user, cardNumberEncryptionService.encrypt("4222222222222223"), LocalDate.now().plusYears(3));
+//
+//        // Создание тестовых транзакций
+//        if (cardRepository.count() >= 2) {
+//            List<Card> cards = cardRepository.findAll();
+//            Card fromCard = cards.get(0);
+//            Card toCard = cards.get(1);
+//
+//            fromCard.setBalance(new BigDecimal("1000.00"));
+//            toCard.setBalance(new BigDecimal("500.00"));
+//
+//            cardRepository.save(fromCard);
+//            cardRepository.save(toCard);
+//
+//            transactionRepository.save(
+//                    new Transaction(
+//                            fromCard,
+//                            toCard,
+//                            new BigDecimal("100.00")
+//                    )
+//            );
+//        }
     }
 
     private UserRole createRole(String roleName) {
@@ -82,13 +90,13 @@ public class DataInitializer implements CommandLineRunner {
                 });
     }
 
-    private User createUser(String username, String password, List<UserRole> userRoles) {
+    private User createUser(String username, String password, UserRole userRoles) {
         return userRepository.findByUsername(username)
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setUsername(username);
                     newUser.setPassword(password);
-                    newUser.setRoles(new HashSet<>(userRoles));
+                    newUser.setRole(userRoles);
                     return userRepository.save(newUser);
                 });
     }
@@ -99,6 +107,7 @@ public class DataInitializer implements CommandLineRunner {
                     Card newCard = new Card();
                     newCard.setOwner(owner);
                     newCard.setCardNumber(cardNumber);
+                    newCard.setLast4(cardNumber.substring(12));
                     newCard.setValidityPeriod(validityPeriod);
                     newCard.setStatus("ACTIVE");
                     return cardRepository.save(newCard);
