@@ -8,6 +8,7 @@ import com.example.bankcards.exception.exceptions.InsufficientFundsException;
 import com.example.bankcards.exception.exceptions.TransactionNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransactionRepository;
+import com.example.bankcards.util.mapper.TransactionMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -22,19 +23,23 @@ import java.util.List;
 @Transactional
 @Log4j2
 public class TransactionService {
+
     private final TransactionRepository transactionRepository;
     private final CardRepository cardRepository;
-    private final ModelMapper modelMapper;
+    private final TransactionMapper transactionMapper;
 
     @Autowired
-    public TransactionService(TransactionRepository transactionRepository, CardRepository cardRepository, ModelMapper modelMapper) {
+    public TransactionService(TransactionRepository transactionRepository,
+                              CardRepository cardRepository,
+                              TransactionMapper transactionMapper) {
         this.transactionRepository = transactionRepository;
         this.cardRepository = cardRepository;
-        this.modelMapper = modelMapper;
+        this.transactionMapper = transactionMapper;
     }
 
     public TransactionDto makeTransfer(Long fromCardId, Long toCardId, BigDecimal amount) {
-        log.info("makeTransfer");
+        log.info("makeTransfer from {} to {} amount {}", fromCardId, toCardId, amount);
+
         Card fromCard = cardRepository.findById(fromCardId)
                 .orElseThrow(() -> new CardNotFoundException("From card not found"));
 
@@ -46,31 +51,32 @@ public class TransactionService {
             throw new InsufficientFundsException("Insufficient funds on card");
         }
 
-        // Блокировка средств
+        // Обновление балансов
         fromCard.setBalance(fromCard.getBalance().subtract(amount));
         toCard.setBalance(toCard.getBalance().add(amount));
 
-        // Создание транзакции
-        Transaction transaction = new Transaction();
-        transaction.setFromCard(fromCard);
-        transaction.setToCard(toCard);
-        transaction.setAmount(amount);
-        transaction.setStatus("SUCCESS");
+        // Создание транзакции через маппер
+        TransactionDto dto = new TransactionDto();
+        dto.setAmount(amount.toPlainString());
+        dto.setStatus("SUCCESS");
 
-        return modelMapper.map(transactionRepository.save(transaction), TransactionDto.class);
+        Transaction transaction = TransactionMapper.toEntity(dto, fromCard, toCard);
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return transactionMapper.toDto(savedTransaction);
     }
 
     public List<TransactionDto> getTransactionsByCard(Long cardId) {
         return transactionRepository.findAllByCardId(cardId)
                 .stream()
-                .map(transaction -> modelMapper.map(transaction, TransactionDto.class))
+                .map(transactionMapper::toDto)
                 .toList();
     }
 
     public List<TransactionDto> getTransactionsByDateRange(LocalDateTime fromDate, LocalDateTime toDate) {
         return transactionRepository.findAllByDateRange(fromDate, toDate)
                 .stream()
-                .map(transaction -> modelMapper.map(transaction, TransactionDto.class))
+                .map(transactionMapper::toDto)
                 .toList();
     }
 

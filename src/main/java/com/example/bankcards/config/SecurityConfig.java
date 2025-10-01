@@ -46,15 +46,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/api/cards").hasRole("USER")
-                        .requestMatchers(HttpMethod.POST,"/api/cards").hasRole("USER")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/swagger-ui/**",
+                                "/swagger-resources/**",
+                                "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll() // регистрация/логин/refresh
+                        .anyRequest().authenticated()                // всё остальное решает @PreAuthorize
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {

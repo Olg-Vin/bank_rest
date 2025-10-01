@@ -9,6 +9,8 @@ import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.util.CardNumberEncryptionService;
 import com.example.bankcards.util.MaskCardNumber;
+import com.example.bankcards.util.mapper.CardMapper;
+import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,74 +20,63 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Service
+@Log4j2
 public class CardService {
+
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
-    private final CardNumberEncryptionService cardNumberEncryptionService;
-    private final ModelMapper modelMapper;
-    private final MaskCardNumber maskCardNumber;
+    private final CardMapper cardMapper;
 
     @Autowired
     public CardService(CardRepository cardRepository,
                        UserRepository userRepository,
-                       CardNumberEncryptionService cardNumberEncryptionService,
-                       ModelMapper modelMapper, MaskCardNumber maskCardNumber) {
+                       CardMapper cardMapper) {
         this.cardRepository = cardRepository;
         this.userRepository = userRepository;
-        this.cardNumberEncryptionService = cardNumberEncryptionService;
-        this.modelMapper = modelMapper;
-        this.maskCardNumber = maskCardNumber;
+        this.cardMapper = cardMapper;
     }
 
     public CardDto createCard(Long ownerId, String cardNumber, LocalDate validityPeriod) throws Exception {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Card card = new Card();
-        card.setOwner(owner);
-        card.setCardNumber(cardNumberEncryptionService.encrypt(cardNumber));
-        card.setValidityPeriod(validityPeriod);
-        return modelMapper.map(cardRepository.save(card), CardDto.class);
+        CardDto cardDto = new CardDto();
+        cardDto.setCardNumber(cardNumber);
+        cardDto.setValidityPeriod(String.valueOf(validityPeriod));
+
+        Card card = cardMapper.toEntity(cardDto, owner);
+        log.info("Creating card for user {} with last4 {}", ownerId, card.getLast4());
+
+        Card savedCard = cardRepository.save(card);
+        return cardMapper.toDto(savedCard);
     }
 
     public List<CardDto> getAllCards() {
         return cardRepository.findAll()
                 .stream()
-                .map(card -> {
-                    CardDto cardDto = modelMapper.map(card, CardDto.class);
-                    cardDto.setCardNumber(maskCardNumber.maskNumber(card.getLast4()));
-                    return cardDto;
-                }).toList();
+                .map(cardMapper::toDto)
+                .toList();
     }
 
     public List<CardDto> getCardByNumber(String number) {
         return cardRepository.findByCardNumber(number)
                 .stream()
-                .map(card -> {
-                    CardDto cardDto = modelMapper.map(card, CardDto.class);
-                    cardDto.setCardNumber(maskCardNumber.maskNumber(card.getLast4()));
-                    return cardDto;
-                }).toList();
+                .map(cardMapper::toDto)
+                .toList();
     }
 
     public List<CardDto> getCardByLast4(String last4) {
         return cardRepository.findByLast4(last4)
                 .stream()
-                .map(card -> {
-                    CardDto cardDto = modelMapper.map(card, CardDto.class);
-                    cardDto.setCardNumber(maskCardNumber.maskNumber(card.getLast4()));
-                    return cardDto;
-                }).toList();
+                .map(cardMapper::toDto)
+                .toList();
     }
 
     public List<CardDto> getCardsByOwner(Long ownerId) {
         return cardRepository.findAllByOwnerId(ownerId)
                 .stream()
-                .map(card -> {
-                    CardDto cardDto = modelMapper.map(card, CardDto.class);
-                    cardDto.setCardNumber(maskCardNumber.maskNumber(card.getLast4()));
-                    return cardDto;
-                }).toList();
+                .map(cardMapper::toDto)
+                .toList();
     }
 
     public void updateCardStatus(Long cardId, String status) {
@@ -114,4 +105,3 @@ public class CardService {
         cardRepository.save(card);
     }
 }
-

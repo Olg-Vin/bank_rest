@@ -8,23 +8,24 @@ import com.example.bankcards.exception.exceptions.RoleNotFoundException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.RoleRepository;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.util.mapper.UserMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final ModelMapper modelMapper;
+    private final UserMapper userMapper;
 
     @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, ModelMapper modelMapper) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.modelMapper = modelMapper;
+        this.userMapper = userMapper;
     }
 
     public UserDto createUser(String username, String password) {
@@ -32,15 +33,16 @@ public class UserService {
         user.setUsername(username);
         user.setPassword(password);
         user = userRepository.save(user);
+
         assignRoleToUser(user.getId(), "ROLE_USER");
-        return modelMapper.map(userRepository.getReferenceById(user.getId()), UserDto.class);
+
+        return userMapper.toDto(userRepository.getReferenceById(user.getId()));
     }
 
     public UserDto getUser(Long userId) {
-        return modelMapper.map(
-                userRepository.findUserWithRoles(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found")),
-                UserDto.class);
+        User user = userRepository.findUserWithRoles(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return userMapper.toDto(user);
     }
 
     public boolean existUserByName(String userName) {
@@ -61,7 +63,7 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(user -> modelMapper.map(user, UserDto.class))
+                .map(userMapper::toDto)
                 .toList();
     }
 
@@ -70,7 +72,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         user.setUsername(username);
         user.setPassword(password);
-        return modelMapper.map(userRepository.save(user), UserDto.class);
+        return userMapper.toDto(userRepository.save(user));
     }
 
     public void deleteUser(Long userId) {

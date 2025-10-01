@@ -51,34 +51,34 @@ public class DataInitializer implements CommandLineRunner {
         UserRole userRole = createRole("ROLE_USER");
 
         // Создание пользователей
-//        User admin = createUser("admin", passwordEncoder.encode("admin123"), adminUserRole);
-//        User user = createUser("user", passwordEncoder.encode("user123"), userRole);
-//
-//        // Создание карт
-//        createCard(admin, cardNumberEncryptionService.encrypt("4111111111111111"), LocalDate.now().plusYears(2));
-//        createCard(user, cardNumberEncryptionService.encrypt("4222222222222222"), LocalDate.now().plusYears(3));
-//        createCard(user, cardNumberEncryptionService.encrypt("4222222222222223"), LocalDate.now().plusYears(3));
-//
-//        // Создание тестовых транзакций
-//        if (cardRepository.count() >= 2) {
-//            List<Card> cards = cardRepository.findAll();
-//            Card fromCard = cards.get(0);
-//            Card toCard = cards.get(1);
-//
-//            fromCard.setBalance(new BigDecimal("1000.00"));
-//            toCard.setBalance(new BigDecimal("500.00"));
-//
-//            cardRepository.save(fromCard);
-//            cardRepository.save(toCard);
-//
-//            transactionRepository.save(
-//                    new Transaction(
-//                            fromCard,
-//                            toCard,
-//                            new BigDecimal("100.00")
-//                    )
-//            );
-//        }
+        User admin = createUser("admin", passwordEncoder.encode("admin123"), adminUserRole);
+        User user = createUser("user", passwordEncoder.encode("user123"), userRole);
+
+        // Создание карт
+        createCard(admin, "4111111111111111", LocalDate.now().plusYears(2));
+        createCard(user, "4222222222222222", LocalDate.now().plusYears(3));
+        createCard(user, "4222222222222223", LocalDate.now().plusYears(3));
+
+        // Создание тестовых транзакций
+        if (cardRepository.count() >= 2) {
+            List<Card> cards = cardRepository.findAll();
+            Card fromCard = cards.get(0);
+            Card toCard = cards.get(1);
+
+            fromCard.setBalance(new BigDecimal("1000.00"));
+            toCard.setBalance(new BigDecimal("500.00"));
+
+            cardRepository.save(fromCard);
+            cardRepository.save(toCard);
+
+            transactionRepository.save(
+                    new Transaction(
+                            fromCard,
+                            toCard,
+                            new BigDecimal("100.00")
+                    )
+            );
+        }
     }
 
     private UserRole createRole(String roleName) {
@@ -106,7 +106,11 @@ public class DataInitializer implements CommandLineRunner {
                 .orElseGet(() -> {
                     Card newCard = new Card();
                     newCard.setOwner(owner);
-                    newCard.setCardNumber(cardNumber);
+                    try {
+                        newCard.setCardNumber(cardNumberEncryptionService.encrypt(cardNumber));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                     newCard.setLast4(cardNumber.substring(12));
                     newCard.setValidityPeriod(validityPeriod);
                     newCard.setStatus("ACTIVE");
