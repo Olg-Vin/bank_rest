@@ -1,0 +1,11 @@
+databaseChangeLog:
+- changeSet:
+  - id: add-tag-1.1
+    author: Vinio
+    changes:
+      - tagDatabase:
+          tag: v.1.1
+
+- include:
+    file: change-columns.yaml
+    relativeToChangelogFile: true

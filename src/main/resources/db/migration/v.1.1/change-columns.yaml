@@ -1,0 +1,23 @@
+databaseChangeLog:
+- changeSet:
+    id: add-role-id-to-users
+    author: Vinio
+    changes:
+      - addColumn:
+          tableName: users
+          columns:
+            - column:
+                name: role_id
+                type: bigint
+                constraints:
+                  nullable: false
+- changeSet:
+    id: add-fk-role-id
+    author: Vinio
+    changes:
+      - addForeignKeyConstraint:
+          baseTableName: users
+          baseColumnNames: role_id
+          constraintName: fk_user_role
+          referencedTableName: roles
+          referencedColumnNames: id
