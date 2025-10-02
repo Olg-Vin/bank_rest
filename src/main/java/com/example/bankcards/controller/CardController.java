@@ -9,8 +9,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +44,7 @@ public class CardController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<CardDto> createCard(@RequestBody CreateCardRequest request) throws Exception {
+    public ResponseEntity<CardDto> createCard(@Valid @RequestBody CreateCardRequest request) throws Exception {
         return ResponseEntity.ok(
                 cardService.createCard(
                         request.ownerId(),
@@ -52,9 +57,11 @@ public class CardController {
     @Operation(summary = "Получить все карты", description = "Возвращает список всех карт (только для ADMIN)")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<CardDto>> getAllCards() {
-        log.info("Получен запрос на получение всех карт");
-        return ResponseEntity.ok(cardService.getAllCards());
+    public ResponseEntity<Page<CardDto>> getAllCards(
+            @PageableDefault(size = 10, sort = "id") Pageable pageable) {
+        log.info("Получен запрос на получение всех карт с пагинацией: {}", pageable);
+        Page<CardDto> cards = cardService.getAllCards(pageable);
+        return ResponseEntity.ok(cards);
     }
 
     @Operation(summary = "Найти карту по номеру", description = "Возвращает карту по полному номеру")
@@ -68,7 +75,7 @@ public class CardController {
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{cardId}/status")
     public ResponseEntity<Void> updateCardStatus(@PathVariable Long cardId,
-                                                 @RequestBody UpdateCardStatusRequest request) {
+                                                 @Valid @RequestBody UpdateCardStatusRequest request) {
         cardService.updateCardStatus(cardId, request.status());
         return ResponseEntity.noContent().build();
     }

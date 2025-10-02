@@ -7,6 +7,7 @@ import com.example.bankcards.dto.TransactionDto;
 import com.example.bankcards.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,7 +50,7 @@ public class TransactionController {
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{transactionId}/status")
     public ResponseEntity<Void> updateTransactionStatus(@PathVariable Long transactionId,
-                                                        @RequestBody UpdateTransactionStatusRequest request) {
+                                                        @Valid @RequestBody UpdateTransactionStatusRequest request) {
         transactionService.updateTransactionStatus(transactionId, request.status());
         return ResponseEntity.noContent().build();
     }

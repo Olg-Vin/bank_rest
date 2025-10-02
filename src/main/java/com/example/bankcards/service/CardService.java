@@ -7,12 +7,11 @@ import com.example.bankcards.exception.exceptions.CardNotFoundException;
 import com.example.bankcards.exception.exceptions.UserNotFoundException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
-import com.example.bankcards.util.CardNumberEncryptionService;
-import com.example.bankcards.util.MaskCardNumber;
 import com.example.bankcards.util.mapper.CardMapper;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -57,6 +56,12 @@ public class CardService {
                 .map(cardMapper::toDto)
                 .toList();
     }
+
+    public Page<CardDto> getAllCards(Pageable pageable) {
+        return cardRepository.findAll(pageable)
+                .map(cardMapper::toDto);
+    }
+
 
     public List<CardDto> getCardByNumber(String number) {
         return cardRepository.findByCardNumber(number)
