@@ -96,14 +96,14 @@ class TransactionControllerTest {
 
     @Test
     void updateTransactionStatus_success() throws Exception {
-        UpdateTransactionStatusRequest request = new UpdateTransactionStatusRequest("COMPLETED");
+        UpdateTransactionStatusRequest request = new UpdateTransactionStatusRequest("SUCCESS");
 
         mockMvc.perform(patch("/api/transactions/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNoContent());
 
-        verify(transactionService).updateTransactionStatus(1L, "COMPLETED");
+        verify(transactionService).updateTransactionStatus(1L, "SUCCESS");
     }
 }
 

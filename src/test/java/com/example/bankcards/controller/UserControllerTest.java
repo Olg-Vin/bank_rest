@@ -56,8 +56,8 @@ class UserControllerTest {
 
     @Test
     void createUser_success() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("john", "pass");
-        when(userService.createUser("john", "pass")).thenReturn(userDto);
+        CreateUserRequest request = new CreateUserRequest("john", "password123");
+        when(userService.createUser("john", "password123")).thenReturn(userDto);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +65,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("john"));
 
-        verify(userService).createUser("john", "pass");
+        verify(userService).createUser("john", "password123");
     }
 
     @Test

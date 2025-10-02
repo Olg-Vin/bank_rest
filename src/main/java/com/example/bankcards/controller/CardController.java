@@ -2,6 +2,7 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.controller.Request.CreateCardRequest;
 import com.example.bankcards.controller.Request.UpdateCardStatusRequest;
+import com.example.bankcards.controller.Response.PageResponse;
 import com.example.bankcards.dto.CardDto;
 import com.example.bankcards.service.CardService;
 import com.example.bankcards.util.CardNumberEncryptionService;
@@ -57,11 +58,15 @@ public class CardController {
     @Operation(summary = "Получить все карты", description = "Возвращает список всех карт (только для ADMIN)")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<CardDto>> getAllCards(
-            @PageableDefault(size = 10, sort = "id") Pageable pageable) {
-        log.info("Получен запрос на получение всех карт с пагинацией: {}", pageable);
+    public ResponseEntity<PageResponse<CardDto>> getAllCards(Pageable pageable) {
         Page<CardDto> cards = cardService.getAllCards(pageable);
-        return ResponseEntity.ok(cards);
+        return ResponseEntity.ok(new PageResponse<>(
+                cards.getContent(),
+                cards.getNumber(),
+                cards.getSize(),
+                cards.getTotalElements(),
+                cards.getTotalPages()
+        ));
     }
 
     @Operation(summary = "Найти карту по номеру", description = "Возвращает карту по полному номеру")

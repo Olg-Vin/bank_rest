@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,6 +53,10 @@ class CardControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(cardController).build();
 
+        this.mockMvc = MockMvcBuilders.standaloneSetup(cardController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .build();
+
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
@@ -59,9 +67,9 @@ class CardControllerTest {
     @Test
     void createCard_success() throws Exception {
 
-        CreateCardRequest request = new CreateCardRequest(1L, "1234567890123456", LocalDate.now());
+        CreateCardRequest request = new CreateCardRequest(1L, "1234567890123456", LocalDate.now().plusDays(1));
 
-        when(cardService.createCard(1L, "1234567890123456", LocalDate.now())).thenReturn(cardDto);
+        when(cardService.createCard(1L, "1234567890123456", LocalDate.now().plusDays(1))).thenReturn(cardDto);
 
         mockMvc.perform(post("/api/cards")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -69,19 +77,24 @@ class CardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cardNumber").value("1234567890123456"));
 
-        verify(cardService).createCard(1L, "1234567890123456", LocalDate.now());
+        verify(cardService).createCard(1L, "1234567890123456", LocalDate.now().plusDays(1));
     }
 
     @Test
     void getAllCards_success() throws Exception {
-        when(cardService.getAllCards()).thenReturn(List.of(cardDto));
+        when(cardService.getAllCards(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(cardDto)));
 
-        mockMvc.perform(get("/api/cards"))
+        mockMvc.perform(get("/api/cards")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "id,asc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].cardNumber").value("1234567890123456"));
+                .andExpect(jsonPath("$.content[0].cardNumber").value("1234567890123456"));
 
-        verify(cardService).getAllCards();
+        verify(cardService).getAllCards(any(Pageable.class));
     }
+
 
     @Test
     void getCardByNumber_success() throws Exception {

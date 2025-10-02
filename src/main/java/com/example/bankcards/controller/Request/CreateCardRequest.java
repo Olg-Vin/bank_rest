@@ -15,7 +15,7 @@ public record CreateCardRequest(
         Long ownerId,
 
         @NotBlank(message = "Номер карты обязателен")
-        @Pattern(regexp = "\\d{4} \\d{4} \\d{4} \\d{4}",
+        @Pattern(regexp = "\\d{16}",
                 message = "Номер карты должен быть в формате '1234 5678 9012 3456'")
         @Schema(description = "Номер карты", example = "1234 5678 9012 3456")
         String cardNumber,
